@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NeighborAct</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+    --warn: #d97706;
+    --warn-light: #fffbeb;
+    --success: #16a34a;
+    --success-light: #f0fdf4;
+    --grey: #6b7280;
+    --grey-light: #f3f4f6;
+    --grey-border: #e5e7eb;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --text: #111827;
+    --text-secondary: #6b7280;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--card);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--grey-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .header-neighborhood {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .emergency-link {
+    font-size: 12px;
+    color: var(--danger);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 4px 10px;
+    border: 1px solid var(--danger);
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ── Emergency Panel ── */
+  .emergency-panel {
+    display: none;
+    background: var(--danger-light);
+    border-bottom: 1px solid #fecaca;
+    padding: 16px;
+  }
+  .emergency-panel.open { display: block; }
+  .emergency-panel h3 { font-size: 14px; color: var(--danger); margin-bottom: 10px; }
+  .emergency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #fecaca;
+  }
+  .emergency-item:last-child { border: none; }
+  .emergency-item span { font-size: 13px; }
+  .emergency-item a {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--danger);
+    text-decoration: none;
+  }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--card);
+    border-bottom: 1px solid var(--grey-border);
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--grey-border);
+    background: var(--card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .filter-pill.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  /* ── Need Cards ── */
+  .board { padding: 12px 16px 100px; }
+  .board-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 12px 0 8px;
+  }
+
+  .need-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+  }
+  .need-card:active { box-shadow: var(--shadow-lg); }
+
+  .need-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .category-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .cat-mutual-aid { background: #dbeafe; color: #1d4ed8; }
+  .cat-infrastructure { background: #fef3c7; color: #92400e; }
+  .cat-accompaniment { background: #ede9fe; color: #6d28d9; }
+  .cat-event { background: #d1fae5; color: #065f46; }
+  .cat-prep { background: #ffe4e6; color: #9f1239; }
+
+  .urgency-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 8px;
+  }
+  .urgency-now { background: #fef2f2; color: var(--danger); }
+  .urgency-week { background: #fffbeb; color: var(--warn); }
+  .urgency-whenever { background: var(--grey-light); color: var(--grey); }
+
+  .need-card-summary {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .need-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .claimed-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .claimed-dots {
+    display: flex;
+    gap: 3px;
+  }
+  .claimed-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--grey-border);
+  }
+  .claimed-dot.filled { background: var(--success); }
+
+  /* ── Recently Resolved ── */
+  .resolved-card {
+    background: var(--success-light);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    border: 1px solid #bbf7d0;
+  }
+  .resolved-card .outcome { font-weight: 500; }
+  .resolved-card .resolved-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--card);
+    border-top: 1px solid var(--grey-border);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    z-index: 100;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 12px;
+    border: none;
+    background: none;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-item svg { width: 24px; height: 24px; }
+  .nav-post-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -24px;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+  }
+  .nav-post-btn svg { width: 28px; height: 28px; }
+
+  /* ── Screens (views) ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Need Detail Screen ── */
+  .detail-header {
+    padding: 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--grey-border);
+  }
+  .back-btn {
+    font-size: 14px;
+    color: var(--primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .detail-body { padding: 16px; }
+  .detail-body .category-pill { margin-bottom: 12px; }
+  .detail-summary {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .detail-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .detail-info {
+    background: var(--grey-light);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .detail-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  .detail-info-row:not(:last-child) { border-bottom: 1px solid var(--grey-border); }
+  .detail-info-label { color: var(--text-secondary); }
+
+  .poster-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--grey-border);
+  }
+  .poster-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .poster-name { font-size: 14px; font-weight: 500; }
+  .poster-rep { font-size: 12px; color: var(--text-secondary); }
+
+  .help-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .help-btn:hover { background: #1d4ed8; }
+
+  /* ── Claim Confirmation ── */
+  .claim-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .claim-modal.open { display: flex; }
+  .claim-sheet {
+    background: var(--card);
+    border-radius: 16px 16px 0 0;
+    padding: 24px 20px env(safe-area-inset-bottom, 24px);
+    width: 100%;
+    max-width: 430px;
+  }
+  .claim-sheet h3 { font-size: 17px; margin-bottom: 14px; }
+  .template-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .template-option {
+    padding: 12px 14px;
+    border: 1px solid var(--grey-border);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--card);
+  }
+  .template-option:hover, .template-option.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .claim-actions { display: flex; gap: 10px; }
+  .claim-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    background: var(--grey-light);
+    border: none;
+    color: var(--text);
+  }
+  .btn-confirm {
+    background: var(--primary);
+    border: none;
+    color: white;
+  }
+
+  /* ── Claimed Success ── */
+  .success-toast {
+    display: none;
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 300;
+    box-shadow: var(--shadow-lg);
+    animation: fadeInOut 2.5s ease;
+  }
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    75% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* ── Post a Need Screen ── */
+  .post-screen { padding: 0 0 100px; }
+  .post-header {
+    background: var(--card);
+    padding: 16px;
+    border-bottom: 1px solid var(--grey-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .post-header h2 { font-size: 17px; }
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .post-steps { padding: 20px 16px; }
+  .post-step { display: none; }
+  .post-step.active { display: block; }
+
+  .step-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .step-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .category-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .category-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid var(--grey-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--card);
+  }
+  .category-option:hover { border-color: var(--primary); }
+  .category-option.selected { border-color: var(--primary); background: var(--primary-light); }
+  .category-option .cat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .category-option .cat-label { font-weight: 500; font-size: 15px; }
+  .category-option .cat-desc { font-size: 12px; color: var(--text-secondary); }
+
+  .post-textarea {
+    width: 100%;
+    height: 120px;
+    border: 2px solid var(--grey-border);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .post-textarea:focus { border-color: var(--primary); }
+  .char-count {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+  }
+  .keyword-warning {
+    display: none;
+    background: var(--warn-light);
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.4;
+  }
+  .keyword-warning.show { display: block; }
+
+  .urgency-options, .people-options {
+    display: flex;
+    gap: 10px;
+  }
+  .urgency-option, .people-option {
+    flex: 1;
+    padding: 16px 12px;
+    border: 2px solid var(--grey-border);
+    border-radius: var(--radius);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--card);
+  }
+  .urgency-option:hover, .urgency-option.selected,
+  .people-option:hover, .people-option.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .urgency-option .urg-label, .people-option .ppl-num {
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+  }
+  .urgency-option .urg-desc, .people-option .ppl-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    display: block;
+  }
+
+  .zone-select {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--grey-border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--card);
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+  }
+  .zone-note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .post-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .post-nav button {
+    flex: 1;
+    padding: 14px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-back-step { background: var(--grey-light); border: none; color: var(--text); }
+  .btn-next-step { background: var(--primary); border: none; color: white; }
+  .btn-next-step:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Preview Card ── */
+  .preview-card {
+    background: var(--grey-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .preview-card .need-card-top { margin-bottom: 8px; }
+  .preview-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  /* ── My Activity Screen ── */
+  .activity-screen { padding: 0 0 100px; }
+  .activity-header {
+    background: var(--card);
+    padding: 16px;
+    border-bottom: 1px solid var(--grey-border);
+  }
+  .activity-header h2 { font-size: 17px; }
+  .activity-body { padding: 16px; }
+  .activity-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 16px 0 8px;
+  }
+  .activity-section-title:first-child { margin-top: 0; }
+  .stat-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--card);
+    padding: 14px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* ── Neighborhood Screen ── */
+  .neighborhood-screen { padding: 0 0 100px; }
+  .neighborhood-header {
+    background: var(--card);
+    padding: 16px;
+    border-bottom: 1px solid var(--grey-border);
+  }
+  .neighborhood-header h2 { font-size: 17px; }
+  .neighborhood-body { padding: 16px; }
+  .member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--grey-border);
+  }
+  .member-badge {
+    font-size: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  /* ── Progress dots ── */
+  .step-progress {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--grey-border);
+  }
+  .step-dot.active { background: var(--primary); }
+  .step-dot.done { background: var(--success); }
+
+  /* ── Norms screen ── */
+  .norms-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .norms-list li {
+    padding: 12px 14px;
+    background: var(--grey-light);
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .norms-list li strong {
+    display: block;
+    margin-bottom: 2px;
+  }
+  .norms-list li .why {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ BOARD SCREEN ════════════════ -->
+<div id="screen-board" class="screen active">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>NeighborAct</h1>
+        <div class="header-neighborhood">Elm Park · 12 active needs</div>
+      </div>
+      <span class="emergency-link" onclick="toggleEmergency()">Emergency?</span>
+    </div>
+  </div>
+
+  <div id="emergency-panel" class="emergency-panel">
+    <h3>Emergency &amp; Safety Numbers</h3>
+    <div class="emergency-item">
+      <span>Emergency</span><a href="tel:911">911</a>
+    </div>
+    <div class="emergency-item">
+      <span>Non-emergency police</span><a href="#">(555) 234-5678</a>
+    </div>
+    <div class="emergency-item">
+      <span>Crisis &amp; Suicide Lifeline</span><a href="tel:988">988</a>
+    </div>
+    <div class="emergency-item">
+      <span>Domestic Violence Hotline</span><a href="#">1-800-799-7233</a>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-pill active" onclick="toggleFilter(this)">All</span>
+    <span class="filter-pill" onclick="toggleFilter(this)">Mutual Aid</span>
+    <span class="filter-pill" onclick="toggleFilter(this)">Infrastructure</span>
+    <span class="filter-pill" onclick="toggleFilter(this)">Accompaniment</span>
+    <span class="filter-pill" onclick="toggleFilter(this)">Event</span>
+    <span class="filter-pill" onclick="toggleFilter(this)">Prep</span>
+  </div>
+
+  <div class="board">
+    <div class="board-section-title">Open Needs</div>
+
+    <div class="need-card" onclick="showDetail(0)">
+      <div class="need-card-top">
+        <span class="category-pill cat-mutual-aid">Mutual Aid</span>
+        <span class="urgency-badge urgency-now">Now</span>
+      </div>
+      <div class="need-card-summary">Need help carrying sandbags to basement before tonight's storm</div>
+      <div class="need-card-meta">
+        <div class="claimed-count">
+          <div class="claimed-dots">
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot"></div>
+            <div class="claimed-dot"></div>
+          </div>
+          <span>1 of 3 claimed</span>
+        </div>
+        <span>6h left</span>
+      </div>
+    </div>
+
+    <div class="need-card" onclick="showDetail(1)">
+      <div class="need-card-top">
+        <span class="category-pill cat-accompaniment">Accompaniment</span>
+        <span class="urgency-badge urgency-week">This week</span>
+      </div>
+      <div class="need-card-summary">Looking for someone to walk with me to the bus stop after dark on weeknights</div>
+      <div class="need-card-meta">
+        <div class="claimed-count">
+          <div class="claimed-dots">
+            <div class="claimed-dot"></div>
+          </div>
+          <span>0 of 1 claimed</span>
+        </div>
+        <span>38h left</span>
+      </div>
+    </div>
+
+    <div class="need-card" onclick="showDetail(2)">
+      <div class="need-card-top">
+        <span class="category-pill cat-infrastructure">Infrastructure</span>
+        <span class="urgency-badge urgency-whenever">Whenever</span>
+      </div>
+      <div class="need-card-summary">Street light out on 5th and Main — need two more people to co-sign a city report</div>
+      <div class="need-card-meta">
+        <div class="claimed-count">
+          <div class="claimed-dots">
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot"></div>
+          </div>
+          <span>2 of 3 claimed</span>
+        </div>
+        <span>22h left</span>
+      </div>
+    </div>
+
+    <div class="need-card" onclick="showDetail(3)">
+      <div class="need-card-top">
+        <span class="category-pill cat-event">Event</span>
+        <span class="urgency-badge urgency-week">This week</span>
+      </div>
+      <div class="need-card-summary">Planning a block cleanup this Saturday — need volunteers to help organize</div>
+      <div class="need-card-meta">
+        <div class="claimed-count">
+          <div class="claimed-dots">
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot"></div>
+            <div class="claimed-dot"></div>
+          </div>
+          <span>3 of 5 claimed</span>
+        </div>
+        <span>44h left</span>
+      </div>
+    </div>
+
+    <div class="need-card" onclick="showDetail(4)">
+      <div class="need-card-top">
+        <span class="category-pill cat-prep">Prep</span>
+        <span class="urgency-badge urgency-now">Now</span>
+      </div>
+      <div class="need-card-summary">Storm coming Thursday — does anyone have extra tarps or plastic sheeting to share?</div>
+      <div class="need-card-meta">
+        <div class="claimed-count">
+          <div class="claimed-dots">
+            <div class="claimed-dot filled"></div>
+            <div class="claimed-dot"></div>
+          </div>
+          <span>1 of 2 claimed</span>
+        </div>
+        <span>14h left</span>
+      </div>
+    </div>
+
+    <div class="board-section-title">Recently Resolved</div>
+
+    <div class="resolved-card">
+      <div class="outcome">✓ Groceries delivered to Mrs. Chen</div>
+      <div class="resolved-meta">Mutual Aid · Helped by David K. · 2 days ago</div>
+    </div>
+    <div class="resolved-card">
+      <div class="outcome">✓ Pothole on Oak Ave reported to city — ref #4821</div>
+      <div class="resolved-meta">Infrastructure · 3 co-signers · 4 days ago</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ DETAIL SCREEN ════════════════ -->
+<div id="screen-detail" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="showScreen('board')">← Back</button>
+  </div>
+  <div class="detail-body">
+    <span id="detail-cat" class="category-pill cat-mutual-aid">Mutual Aid</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
+      <span id="detail-urgency" class="urgency-badge urgency-now">Now</span>
+      <span id="detail-time" style="font-size:12px;color:var(--text-secondary)">6h left</span>
+    </div>
+    <div id="detail-summary" class="detail-summary"></div>
+    <div id="detail-desc" class="detail-description"></div>
+
+    <div class="poster-info">
+      <div id="detail-avatar" class="poster-avatar">M</div>
+      <div>
+        <div id="detail-poster" class="poster-name">Maria G.</div>
+        <div id="detail-rep" class="poster-rep">Helped 14 times · Member since Jan 2026</div>
+      </div>
+    </div>
+
+    <div class="detail-info">
+      <div class="detail-info-row">
+        <span class="detail-info-label">Zone</span>
+        <span id="detail-zone">North Elm Park</span>
+      </div>
+      <div class="detail-info-row">
+        <span class="detail-info-label">People needed</span>
+        <span id="detail-people">3 (1 claimed)</span>
+      </div>
+      <div class="detail-info-row">
+        <span class="detail-info-label">Posted</span>
+        <span id="detail-posted">2 hours ago</span>
+      </div>
+    </div>
+
+    <button class="help-btn" onclick="openClaim()">I can help</button>
+  </div>
+</div>
+
+<!-- ════════════════ CLAIM MODAL ════════════════ -->
+<div id="claim-modal" class="claim-modal" onclick="closeClaim(event)">
+  <div class="claim-sheet" onclick="event.stopPropagation()">
+    <h3>Send a message to get started</h3>
+    <div class="template-options">
+      <div class="template-option selected" onclick="selectTemplate(this)">I can help — when works for you?</div>
+      <div class="template-option" onclick="selectTemplate(this)">I have what you need. Where should we meet?</div>
+      <div class="template-option" onclick="selectTemplate(this)">I'm available this evening. Does that work?</div>
+    </div>
+    <div class="claim-actions">
+      <button class="btn-cancel" onclick="closeClaim()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmClaim()">Send &amp; Claim</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ SUCCESS TOAST ════════════════ -->
+<div id="success-toast" class="success-toast">Claimed! You'll hear back soon.</div>
+
+<!-- ════════════════ POST A NEED SCREEN ════════════════ -->
+<div id="screen-post" class="screen">
+  <div class="post-screen">
+    <div class="post-header">
+      <h2>Post a Need</h2>
+      <button class="close-btn" onclick="showScreen('board')">×</button>
+    </div>
+    <div class="post-steps">
+      <div class="step-progress">
+        <div class="step-dot active" id="sd0"></div>
+        <div class="step-dot" id="sd1"></div>
+        <div class="step-dot" id="sd2"></div>
+        <div class="step-dot" id="sd3"></div>
+        <div class="step-dot" id="sd4"></div>
+        <div class="step-dot" id="sd5"></div>
+      </div>
+
+      <!-- Step 0: Category -->
+      <div class="post-step active" id="ps0">
+        <div class="step-label">Step 1 of 6</div>
+        <div class="step-title">What kind of help?</div>
+        <div class="category-grid">
+          <div class="category-option" onclick="selectCat(this, 'mutual-aid')">
+            <div class="cat-icon" style="background:#dbeafe">🤝</div>
+            <div><div class="cat-label">Mutual Aid</div><div class="cat-desc">Groceries, rides, moving help, tool lending</div></div>
+          </div>
+          <div class="category-option" onclick="selectCat(this, 'infrastructure')">
+            <div class="cat-icon" style="background:#fef3c7">🔧</div>
+            <div><div class="cat-label">Infrastructure</div><div class="cat-desc">Potholes, downed trees, broken lights</div></div>
+          </div>
+          <div class="category-option" onclick="selectCat(this, 'accompaniment')">
+            <div class="cat-icon" style="background:#ede9fe">🚶</div>
+            <div><div class="cat-label">Accompaniment</div><div class="cat-desc">Walk with me, check on my house</div></div>
+          </div>
+          <div class="category-option" onclick="selectCat(this, 'event')">
+            <div class="cat-icon" style="background:#d1fae5">🎉</div>
+            <div><div class="cat-label">Event</div><div class="cat-desc">Block party, cleanup, skill swap</div></div>
+          </div>
+          <div class="category-option" onclick="selectCat(this, 'prep')">
+            <div class="cat-icon" style="background:#ffe4e6">⛈️</div>
+            <div><div class="cat-label">Prep</div><div class="cat-desc">Storm prep, supply sharing, evacuation</div></div>
+          </div>
+        </div>
+        <div class="post-nav">
+          <button class="btn-next-step" disabled id="btn-next-0" onclick="postStep(1)">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 1: Description -->
+      <div class="post-step" id="ps1">
+        <div class="step-label">Step 2 of 6</div>
+        <div class="step-title">What do you need?</div>
+        <textarea class="post-textarea" id="need-text" placeholder="Describe what you need help with…" maxlength="280" oninput="checkNeedText()"></textarea>
+        <div class="char-count"><span id="char-num">0</span> / 280</div>
+        <div class="keyword-warning" id="kw-warning">
+          ⚠️ Posts can't include descriptions of people. If you're concerned about safety, call the non-emergency line: <strong>(555) 234-5678</strong>
+        </div>
+        <div class="post-nav">
+          <button class="btn-back-step" onclick="postStep(0)">Back</button>
+          <button class="btn-next-step" disabled id="btn-next-1" onclick="postStep(2)">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Urgency -->
+      <div class="post-step" id="ps2">
+        <div class="step-label">Step 3 of 6</div>
+        <div class="step-title">When do you need this?</div>
+        <div class="urgency-options">
+          <div class="urgency-option" onclick="selectUrgency(this, 'now')">
+            <span class="urg-label" style="color:var(--danger)">Now</span>
+            <span class="urg-desc">Pushes a notification</span>
+          </div>
+          <div class="urgency-option" onclick="selectUrgency(this, 'week')">
+            <span class="urg-label" style="color:var(--warn)">This week</span>
+            <span class="urg-desc">Shows in digest</span>
+          </div>
+          <div class="urgency-option" onclick="selectUrgency(this, 'whenever')">
+            <span class="urg-label">Whenever</span>
+            <span class="urg-desc">No rush</span>
+          </div>
+        </div>
+        <div class="post-nav">
+          <button class="btn-back-step" onclick="postStep(1)">Back</button>
+          <button class="btn-next-step" disabled id="btn-next-2" onclick="postStep(3)">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3: People -->
+      <div class="post-step" id="ps3">
+        <div class="step-label">Step 4 of 6</div>
+        <div class="step-title">How many people?</div>
+        <div class="people-options">
+          <div class="people-option" onclick="selectPeople(this, 1)">
+            <span class="ppl-num">1</span><span class="ppl-label">person</span>
+          </div>
+          <div class="people-option" onclick="selectPeople(this, 2)">
+            <span class="ppl-num">2</span><span class="ppl-label">people</span>
+          </div>
+          <div class="people-option" onclick="selectPeople(this, 3)">
+            <span class="ppl-num">3</span><span class="ppl-label">people</span>
+          </div>
+          <div class="people-option" onclick="selectPeople(this, 5)">
+            <span class="ppl-num">5+</span><span class="ppl-label">people</span>
+          </div>
+        </div>
+        <div class="post-nav">
+          <button class="btn-back-step" onclick="postStep(2)">Back</button>
+          <button class="btn-next-step" disabled id="btn-next-3" onclick="postStep(4)">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Zone -->
+      <div class="post-step" id="ps4">
+        <div class="step-label">Step 5 of 6</div>
+        <div class="step-title">Where in the neighborhood?</div>
+        <select class="zone-select" id="zone-select" onchange="document.getElementById('btn-next-4').disabled = !this.value">
+          <option value="">Select a zone…</option>
+          <option>North Elm Park</option>
+          <option>South Elm Park</option>
+          <option>Near the school</option>
+          <option>Near the park</option>
+          <option>Main Street corridor</option>
+        </select>
+        <div class="zone-note" id="zone-note">No exact address is shared. You'll coordinate a meeting point in a private message after someone claims your need.</div>
+        <div class="post-nav">
+          <button class="btn-back-step" onclick="postStep(3)">Back</button>
+          <button class="btn-next-step" disabled id="btn-next-4" onclick="postStep(5)">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Review -->
+      <div class="post-step" id="ps5">
+        <div class="step-label">Step 6 of 6</div>
+        <div class="step-title">Review your post</div>
+        <div class="preview-label">This is what neighbors will see:</div>
+        <div class="preview-card">
+          <div class="need-card-top">
+            <span id="preview-cat" class="category-pill cat-mutual-aid">Mutual Aid</span>
+            <span id="preview-urgency" class="urgency-badge urgency-now">Now</span>
+          </div>
+          <div id="preview-summary" class="need-card-summary"></div>
+          <div class="need-card-meta">
+            <div class="claimed-count">
+              <div class="claimed-dots" id="preview-dots"></div>
+              <span id="preview-people">0 of 1 claimed</span>
+            </div>
+            <span>48h</span>
+          </div>
+        </div>
+        <div class="post-nav">
+          <button class="btn-back-step" onclick="postStep(4)">Back</button>
+          <button class="btn-next-step" onclick="publishNeed()" style="background:var(--success)">Post Need</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ MY ACTIVITY SCREEN ════════════════ -->
+<div id="screen-activity" class="screen">
+  <div class="activity-header"><h2>My Activity</h2></div>
+  <div class="activity-body">
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num">14</div>
+        <div class="stat-label">Needs fulfilled</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Needs posted</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">1</div>
+        <div class="stat-label">Active claim</div>
+      </div>
+    </div>
+    <div class="activity-section-title">Active Claims</div>
+    <div class="need-card">
+      <div class="need-card-top">
+        <span class="category-pill cat-infrastructure">Infrastructure</span>
+        <span class="urgency-badge urgency-whenever">Whenever</span>
+      </div>
+      <div class="need-card-summary">Street light out on 5th and Main</div>
+      <div class="need-card-meta">
+        <span style="color:var(--success);font-weight:500">You claimed this</span>
+        <span>22h left</span>
+      </div>
+    </div>
+    <div class="activity-section-title">Past Activity</div>
+    <div class="resolved-card">
+      <div class="outcome">✓ Helped carry sandbags for Rosa M.</div>
+      <div class="resolved-meta">Mutual Aid · Oct 25</div>
+    </div>
+    <div class="resolved-card">
+      <div class="outcome">✓ Walked with Jamie to bus stop</div>
+      <div class="resolved-meta">Accompaniment · Oct 22</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ NEIGHBORHOOD SCREEN ════════════════ -->
+<div id="screen-neighborhood" class="screen">
+  <div class="neighborhood-header"><h2>Elm Park</h2></div>
+  <div class="neighborhood-body">
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num">47</div>
+        <div class="stat-label">Members</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">12</div>
+        <div class="stat-label">Active needs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">89</div>
+        <div class="stat-label">Needs fulfilled</div>
+      </div>
+    </div>
+    <div class="activity-section-title">Moderators</div>
+    <div class="member-item">
+      <div class="poster-avatar" style="background:#d1fae5;color:#065f46">R</div>
+      <div>
+        <div class="poster-name">Rosa M.<span class="member-badge">Mod</span></div>
+        <div class="poster-rep">Helped 31 times · Since Aug 2025</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="poster-avatar" style="background:#fef3c7;color:#92400e">T</div>
+      <div>
+        <div class="poster-name">Tom H.<span class="member-badge">Mod</span></div>
+        <div class="poster-rep">Helped 22 times · Since Sep 2025</div>
+      </div>
+    </div>
+    <div class="activity-section-title">Members</div>
+    <div class="member-item">
+      <div class="poster-avatar">M</div>
+      <div>
+        <div class="poster-name">Maria G.</div>
+        <div class="poster-rep">Helped 14 times · Since Jan 2026</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="poster-avatar" style="background:#ede9fe;color:#6d28d9">D</div>
+      <div>
+        <div class="poster-name">David K.</div>
+        <div class="poster-rep">Helped 8 times · Since Mar 2026</div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="poster-avatar" style="background:#ffe4e6;color:#9f1239">J</div>
+      <div>
+        <div class="poster-name">Jamie L.</div>
+        <div class="poster-rep">Helped 5 times · Since May 2026</div>
+      </div>
+    </div>
+
+    <div class="activity-section-title">Local Numbers</div>
+    <div class="detail-info" style="margin-top:4px">
+      <div class="detail-info-row"><span class="detail-info-label">Non-emergency police</span><span>(555) 234-5678</span></div>
+      <div class="detail-info-row"><span class="detail-info-label">City services</span><span>(555) 345-6789</span></div>
+      <div class="detail-info-row"><span class="detail-info-label">Water/power outage</span><span>(555) 456-7890</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ BOTTOM NAV ════════════════ -->
+<div class="bottom-nav">
+  <button class="nav-item active" id="nav-board" onclick="showScreen('board')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Board
+  </button>
+  <button class="nav-item" id="nav-activity" onclick="showScreen('activity')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    Activity
+  </button>
+  <button class="nav-post-btn" onclick="showScreen('post')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="nav-item" id="nav-neighborhood" onclick="showScreen('neighborhood')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Neighbors
+  </button>
+</div>
+
+<script>
+// ── Data ──
+const needs = [
+  {
+    cat: 'mutual-aid', catLabel: 'Mutual Aid', urgency: 'now', urgLabel: 'Now',
+    summary: 'Need help carrying sandbags to basement before tonight\'s storm',
+    desc: 'The storm is supposed to hit around 9pm. I have the sandbags but I can\'t carry them down the stairs alone. Any help appreciated — should take about 30 minutes.',
+    poster: 'Maria G.', avatar: 'M', rep: 'Helped 14 times · Member since Jan 2026',
+    zone: 'North Elm Park', people: 3, claimed: 1, time: '6h left', posted: '2 hours ago'
+  },
+  {
+    cat: 'accompaniment', catLabel: 'Accompaniment', urgency: 'week', urgLabel: 'This week',
+    summary: 'Looking for someone to walk with me to the bus stop after dark on weeknights',
+    desc: 'My shift ends at 10pm and the walk to the stop on Main St feels isolated. Just looking for company — I\'m happy to adjust timing. Meeting point shared after claiming.',
+    poster: 'Jamie L.', avatar: 'J', rep: 'Helped 5 times · Member since May 2026',
+    zone: 'Main Street corridor', people: 1, claimed: 0, time: '38h left', posted: '10 hours ago'
+  },
+  {
+    cat: 'infrastructure', catLabel: 'Infrastructure', urgency: 'whenever', urgLabel: 'Whenever',
+    summary: 'Street light out on 5th and Main — need two more people to co-sign a city report',
+    desc: 'The light has been out for two weeks. City services said they prioritize reports with multiple residents. I\'ve started the form — just need two more names to co-sign.',
+    poster: 'Tom H.', avatar: 'T', rep: 'Helped 22 times · Member since Sep 2025',
+    zone: 'Near the school', people: 3, claimed: 2, time: '22h left', posted: '1 day ago'
+  },
+  {
+    cat: 'event', catLabel: 'Event', urgency: 'week', urgLabel: 'This week',
+    summary: 'Planning a block cleanup this Saturday — need volunteers to help organize',
+    desc: 'We\'re cleaning up the lot behind the park. I\'ll bring bags and gloves but need people to help coordinate zones and haul trash to the pickup point.',
+    poster: 'Rosa M.', avatar: 'R', rep: 'Helped 31 times · Member since Aug 2025',
+    zone: 'Near the park', people: 5, claimed: 3, time: '44h left', posted: '4 hours ago'
+  },
+  {
+    cat: 'prep', catLabel: 'Prep', urgency: 'now', urgLabel: 'Now',
+    summary: 'Storm coming Thursday — does anyone have extra tarps or plastic sheeting to share?',
+    desc: 'My basement window cover broke and I need something to cover it before the rain. Happy to return it after. I\'m in North Elm Park near the corner store.',
+    poster: 'David K.', avatar: 'D', rep: 'Helped 8 times · Member since Mar 2026',
+    zone: 'North Elm Park', people: 2, claimed: 1, time: '14h left', posted: '1 hour ago'
+  }
+];
+
+const avatarColors = {
+  M: '', T: 'background:#fef3c7;color:#92400e', R: 'background:#d1fae5;color:#065f46',
+  D: 'background:#ede9fe;color:#6d28d9', J: 'background:#ffe4e6;color:#9f1239'
+};
+
+// ── Navigation ──
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navBtn = document.getElementById('nav-' + name);
+  if (navBtn) navBtn.classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'post') resetPostForm();
+}
+
+function toggleEmergency() {
+  document.getElementById('emergency-panel').classList.toggle('open');
+}
+
+function toggleFilter(el) {
+  if (el.textContent === 'All') {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    document.querySelector('.filter-pill.active:first-child')?.classList.remove('active');
+    el.classList.toggle('active');
+    if (!document.querySelector('.filter-pill.active')) {
+      document.querySelector('.filter-pill').classList.add('active');
+    }
+  }
+}
+
+// ── Detail Screen ──
+function showDetail(idx) {
+  const n = needs[idx];
+  document.getElementById('detail-cat').className = 'category-pill cat-' + n.cat;
+  document.getElementById('detail-cat').textContent = n.catLabel;
+  document.getElementById('detail-urgency').className = 'urgency-badge urgency-' + n.urgency;
+  document.getElementById('detail-urgency').textContent = n.urgLabel;
+  document.getElementById('detail-time').textContent = n.time;
+  document.getElementById('detail-summary').textContent = n.summary;
+  document.getElementById('detail-desc').textContent = n.desc;
+  document.getElementById('detail-poster').textContent = n.poster;
+  document.getElementById('detail-avatar').textContent = n.avatar;
+  if (avatarColors[n.avatar]) document.getElementById('detail-avatar').style.cssText = avatarColors[n.avatar];
+  document.getElementById('detail-rep').textContent = n.rep;
+  document.getElementById('detail-zone').textContent = n.zone;
+  document.getElementById('detail-people').textContent = n.people + ' (' + n.claimed + ' claimed)';
+  document.getElementById('detail-posted').textContent = n.posted;
+  showScreen('detail');
+}
+
+// ── Claim Flow ──
+function openClaim() { document.getElementById('claim-modal').classList.add('open'); }
+function closeClaim(e) {
+  if (!e || e.target === document.getElementById('claim-modal'))
+    document.getElementById('claim-modal').classList.remove('open');
+}
+function selectTemplate(el) {
+  document.querySelectorAll('.template-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function confirmClaim() {
+  document.getElementById('claim-modal').classList.remove('open');
+  const toast = document.getElementById('success-toast');
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 2600);
+  setTimeout(() => showScreen('board'), 1800);
+}
+
+// ── Post a Need ──
+let postData = { cat: '', text: '', urgency: '', people: 0, zone: '' };
+let currentStep = 0;
+
+function resetPostForm() {
+  currentStep = 0;
+  postData = { cat: '', text: '', urgency: '', people: 0, zone: '' };
+  document.querySelectorAll('.post-step').forEach((s, i) => s.classList.toggle('active', i === 0));
+  document.querySelectorAll('.category-option').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.urgency-option').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.people-option').forEach(c => c.classList.remove('selected'));
+  document.getElementById('need-text').value = '';
+  document.getElementById('char-num').textContent = '0';
+  document.getElementById('kw-warning').classList.remove('show');
+  document.getElementById('zone-select').value = '';
+  for (let i = 0; i < 6; i++) {
+    document.getElementById('sd' + i).className = 'step-dot' + (i === 0 ? ' active' : '');
+  }
+  for (let i = 0; i < 5; i++) {
+    const btn = document.getElementById('btn-next-' + i);
+    if (btn) btn.disabled = true;
+  }
+}
+
+function postStep(n) {
+  if (n === 5) buildPreview();
+  document.querySelectorAll('.post-step').forEach((s, i) => s.classList.toggle('active', i === n));
+  for (let i = 0; i < 6; i++) {
+    const dot = document.getElementById('sd' + i);
+    dot.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  currentStep = n;
+}
+
+function selectCat(el, cat) {
+  document.querySelectorAll('.category-option').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  postData.cat = cat;
+  document.getElementById('btn-next-0').disabled = false;
+}
+
+const blocked = /(tall|short|wearing|black male|white male|asian|hispanic|latino|dark.?skinned|light.?skinned|\d+\s+(oak|elm|main|pine|maple|street|st|ave|road|rd|drive|dr|boulevard|blvd)\b)/i;
+function checkNeedText() {
+  const v = document.getElementById('need-text').value;
+  document.getElementById('char-num').textContent = v.length;
+  const warn = document.getElementById('kw-warning');
+  if (blocked.test(v)) {
+    warn.classList.add('show');
+    document.getElementById('btn-next-1').disabled = true;
+  } else {
+    warn.classList.remove('show');
+    document.getElementById('btn-next-1').disabled = v.length < 10;
+  }
+}
+
+function selectUrgency(el, val) {
+  document.querySelectorAll('.urgency-option').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  postData.urgency = val;
+  document.getElementById('btn-next-2').disabled = false;
+}
+
+function selectPeople(el, val) {
+  document.querySelectorAll('.people-option').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  postData.people = val;
+  document.getElementById('btn-next-3').disabled = false;
+}
+
+const catLabels = { 'mutual-aid': 'Mutual Aid', infrastructure: 'Infrastructure', accompaniment: 'Accompaniment', event: 'Event', prep: 'Prep' };
+const urgLabels = { now: 'Now', week: 'This week', whenever: 'Whenever' };
+
+function buildPreview() {
+  postData.text = document.getElementById('need-text').value;
+  postData.zone = document.getElementById('zone-select').value;
+  const pc = document.getElementById('preview-cat');
+  pc.className = 'category-pill cat-' + postData.cat;
+  pc.textContent = catLabels[postData.cat] || postData.cat;
+  const pu = document.getElementById('preview-urgency');
+  pu.className = 'urgency-badge urgency-' + postData.urgency;
+  pu.textContent = urgLabels[postData.urgency] || postData.urgency;
+  document.getElementById('preview-summary').textContent = postData.text;
+  const dots = document.getElementById('preview-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < postData.people; i++) {
+    const d = document.createElement('div');
+    d.className = 'claimed-dot';
+    dots.appendChild(d);
+  }
+  document.getElementById('preview-people').textContent = '0 of ' + postData.people + ' claimed';
+}
+
+function publishNeed() {
+  const toast = document.getElementById('success-toast');
+  toast.textContent = 'Posted! Your neighbors can see it now.';
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; toast.textContent = 'Claimed! You\'ll hear back soon.'; }, 2600);
+  setTimeout(() => showScreen('board'), 1800);
+}
+</script>
+</body>
+</html>
